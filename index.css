@@ -7,8 +7,11 @@ h1, h2 {
   text-align:center;
   margin:0px auto;
 }
+h1 {
+  font-size:2rem;
+}
 h2 {
-  font-size:1.1em;
+  font-size:1.1rem;
   font-weight:normal;
 }
 
@@ -30,15 +33,11 @@ ol, ul {
   background: #fff;
   border: 1px solid #999;
   float: left;
-  font-size: 50px;
   font-weight: bold;
-  line-height: 60px;
-  height: 60px;
   margin-right: -1px;
   margin-top: -1px;
   padding: 0;
   text-align: center;
-  width: 60px;
 }
 
 .square[data-winning-move='true'] {
@@ -60,14 +59,9 @@ ol, ul {
   justify-content: center;
   margin-top:20px;
 }
-.game-board, .game-info {
-  width:200px;
-}
-.game-board {
-
-}
 .game-info {
   margin-left: 20px;
+  text-align:left;
 }
 
 [data-currentmove='true'] button {
@@ -90,6 +84,66 @@ ol, ul {
 .game-info .moves li {
   margin:0px;
   padding:0px;
+}
+
+@media (max-width:550px) {
+  .square {
+    height:calc(15vw - 20px);
+    width:calc(15vw - 20px);
+    font-size:calc(15vw - 30px);
+    line-height:calc(15vw - 20px);
+  }
+  .game {
+    display:block;
+    margin:20px auto 0px auto;
+    text-align:center;
+  }
+  .game-board, .game-info {
+    display:inline-block;
+    width:auto;
+    vertical-align:top;
+  }
+}
+
+@media (min-width:550px) {
+  .square {
+    font-size: 50px;
+    line-height: 60px;
+    height: 60px;
+    width: 60px;
+  }
+  .game-board {
+    width:200px;
+  }
+}
+
+@media (min-width:800px) {
+  h1 {
+    font-size:5vw;
+  }
+  h2 {
+    font-size:3vw;
+  }
+  .game-info button {
+    font-size:2vw;
+    line-height:3vw;
+  }
+  .game-info .toggleMoveListOrder {
+    font-size:2vw;
+    line-height:3vw;
+  }
+}
+
+@media (min-width:1000px) {
+  .square {
+    font-size: 80px;
+    line-height: 90px;
+    height: 90px;
+    width: 90px;
+  }
+  .game-board {
+    width:300px;
+  }
 }
 
 
