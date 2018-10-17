@@ -4,7 +4,7 @@ import './index.css';
 
 function Square(props) {
   return (
-    <button data-winningMove={props.winningMove} className="square" onClick={props.onClick}>
+    <button data-winning-move={props.winningMove} className="square" onClick={props.onClick}>
       {props.value}
     </button>
   );
@@ -70,18 +70,6 @@ class MoveList extends React.Component {
   }
 
   render() {
-    const status = (
-      this.props.winner?
-        `Winner: ${this.props.winner}`
-        :
-        (
-          this.props.move_i === 9 ?
-          'Cats game!'
-          :
-          `Player ${this.props.players[this.props.move_i % this.props.players.length]}, choose a square!`
-        )
-      );
-
     const moves = this.getOrderedHistory().map((squares, move_i, orderedHistory) => {
       if (!this.state.isAscending) {
         move_i = this.props.history.length - 1 - move_i;
@@ -102,7 +90,6 @@ class MoveList extends React.Component {
 
     return (
       <div className="game-info">
-        <div>{status}</div>
         <button className="toggleMoveListOrder" onClick={() => this.toggleOrder()}>{this.getOrderText()}</button>
         <ol reversed={!this.state.isAscending} className="moves">{moves}</ol>
       </div>
@@ -121,7 +108,7 @@ class MoveList extends React.Component {
             col: (i % 3) + 1,
           }
         )
-      }.bind(this),
+      },
       false
     );
   }
@@ -139,24 +126,39 @@ class Game extends React.Component {
     const history = this.state.history;
     const current = history[this.state.move_i];
     const winner = calculateWinner(current);
+    const playerSymbol = this.props.players[this.state.move_i % this.props.players.length];
+    const status = (
+      winner?
+        `Winner: ${winner.player}`
+        :
+        (
+          this.state.move_i === 9 ?
+          'Cats game!'
+          :
+          `Player ${playerSymbol}, choose a square!`
+        )
+      );
 
     return (
-      <div className="game">
-        <div className="game-board">
-          <Board
-            winningMoves={winner && winner.winningMoves}
-            squares={current}
-            onClick={(i) => this.handleClick(i)}
+      <main>
+        <h1>TicTacToe</h1>
+        <h2>{status}</h2>
+        <div className="game">
+          <div className="game-board">
+            <Board
+              winningMoves={winner && winner.winningMoves}
+              squares={current}
+              onClick={(i) => this.handleClick(i)}
+            />
+          </div>
+          <MoveList
+            jumpTo={(move) => this.jumpTo(move)}
+            history={this.state.history}
+            move_i={this.state.move_i}
+            winner={winner && winner.player}
           />
         </div>
-        <MoveList
-          jumpTo={(move) => this.jumpTo(move)}
-          history={this.state.history}
-          players={this.props.players}
-          move_i={this.state.move_i}
-          winner={winner && winner.player}
-        />
-      </div>
+      </main>
     );
   }
 
