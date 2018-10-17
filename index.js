@@ -118,8 +118,8 @@ class Game extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      history: [Array(9).fill(null)],
-      move_i: 0,
+      history: this.props.history,
+      move_i: this.props.move_i,
     };
   }
   render() {
@@ -170,9 +170,15 @@ class Game extends React.Component {
       return;
     }
     squares[i] = this.props.players[this.state.move_i % this.props.players.length];
+    const newHistory = history.concat([squares]);
     this.setState({
-      history: history.concat([squares]),
+      history: newHistory,
       move_i: history.length,
+    });
+    pushBrowserState({
+      history: newHistory,
+      move_i: history.length,
+      players: this.props.players
     });
   }
 
@@ -180,19 +186,83 @@ class Game extends React.Component {
     this.setState({
       move_i: move_i,
     });
+    pushBrowserState({
+      history: this.state.history,
+      move_i: move_i,
+      players: this.props.players
+    });
   }
-
 }
 
 // ========================================
+function initializePage() {
+  replaceBrowserState({
+    "history": getJSONParam("history") || [Array(9).fill(null)],
+    "move_i": getJSONParam("move_i") || 0,
+    "players": getJSONParam("players") || ['X','O'],
+  });
 
-ReactDOM.render(
-  <Game
-    players={['X','O']}
-    onClick={(i) => this.handleClick(i)}
-  />,
-  document.getElementById('root')
-);
+  ReactDOM.render(
+    <Game
+      history={window.history.state.history}
+      move_i={window.history.state.move_i}
+      players={window.history.state.players}
+      onClick={(i) => this.handleClick(i)}
+    />,
+    document.getElementById('root')
+  );
+}
+
+window.addEventListener('popstate', function() {
+  if (
+    (document.readyState === "complete" || document.readyState === "loaded" || document.readyState === "interactive")
+  ) {
+    initializePage();
+  } else {
+    window.addEventListener("DOMContentLoaded", initializePage);
+  }
+});
+initializePage();
+
+function updateBrowserState(fn, state) {
+  fn.call(
+    window.history,
+    state,
+    document.title,
+    `?
+    history=${makeJSONParam(state.history)}
+    &move_i=${makeJSONParam(state.move_i)}
+    &players=${makeJSONParam(state.players)}
+    `.replace(/ /g,'')
+  );
+}
+
+function pushBrowserState(state) {
+  updateBrowserState(window.history.pushState, state);
+}
+
+function replaceBrowserState(state) {
+  updateBrowserState(window.history.replaceState, state);
+}
+
+function getJSONParam(paramKey) {
+  return window.location.search.substring(1).split("&").reduce(function(paramValue, param){
+      var param_entry = param.split("=");
+      if (param_entry[0] === paramKey) {
+        return JSON.parse(atob(decodeURIComponent(param_entry[1])));
+      } else if (paramValue) {
+        return paramValue;
+      } else {
+        return false;
+      }
+    },
+    false
+  );
+}
+
+function makeJSONParam(paramValue) {
+  return encodeURIComponent(btoa(JSON.stringify(paramValue)));
+}
 
 function calculateWinner(squares) {
   const lines = [
