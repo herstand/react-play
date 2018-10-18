@@ -14,11 +14,17 @@ class Board extends React.Component {
   renderSquare(i) {
     return (
       <Square
-        winningMove={this.props.winningMoves && this.props.winningMoves.indexOf(i) > -1}
+        winningMove={this.isAWinningMove(i)}
         key={i}
         value={this.props.squares[i]}
         onClick={() => this.props.onClick(i)}
       />
+    );
+  }
+
+  isAWinningMove(square_i) {
+    return this.props.winningMoves && this.props.winningMoves.some(
+      (winningMove, i) => winningMove.indexOf(square_i) > -1
     );
   }
 
@@ -125,11 +131,11 @@ class Game extends React.Component {
   render() {
     const history = this.state.history;
     const current = history[this.state.move_i];
-    const winner = calculateWinner(current);
+    const win = calculateWinner(current);
     const playerSymbol = this.props.players[this.state.move_i % this.props.players.length];
     const status = (
-      winner?
-        `Winner: ${winner.player}`
+      win?
+        `Winner: ${win.player}`
         :
         (
           this.state.move_i === 9 ?
@@ -146,7 +152,7 @@ class Game extends React.Component {
         <div className="game">
           <div className="game-board">
             <Board
-              winningMoves={winner && winner.winningMoves}
+              winningMoves={win && win.winningMoves}
               squares={current}
               onClick={(i) => this.handleClick(i)}
             />
@@ -155,7 +161,7 @@ class Game extends React.Component {
             jumpTo={(move) => this.jumpTo(move)}
             history={this.state.history}
             move_i={this.state.move_i}
-            winner={winner && winner.player}
+            win={win && win.player}
           />
         </div>
       </main>
@@ -265,6 +271,10 @@ function makeJSONParam(paramValue) {
 }
 
 function calculateWinner(squares) {
+  var win = {
+    player: null,
+    winningMoves: []
+  };
   const lines = [
     [0, 1, 2],
     [3, 4, 5],
@@ -279,11 +289,14 @@ function calculateWinner(squares) {
   for (let i = 0; i < lines.length; i++) {
     const [a, b, c] = lines[i];
     if (squares[a] && squares[a] === squares[b] && squares[a] === squares[c]) {
-      return {
-        player: squares[a],
-        winningMoves: lines[i],
-      };
+      if (!win.player) {
+        win.player = squares[a];
+      }
+      win.winningMoves.push(lines[i]);
     }
+  }
+  if (win.player) {
+    return win;
   }
   return null;
 }
