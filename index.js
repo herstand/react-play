@@ -123,16 +123,46 @@ class MoveList extends React.Component {
 class Game extends React.Component {
   constructor(props) {
     super(props);
+
     this.state = {
-      history: this.props.history,
-      move_i: this.props.move_i,
+      "history": getJSONParam("history") || [Array(9).fill(null)],
+      "move_i": getJSONParam("move_i") || 0,
+      "players": getJSONParam("players") || ['X','O'],
     };
+
+    replaceBrowserState({
+      history: this.state.history,
+      move_i: this.state.move_i,
+      players: this.state.players,
+    });
   }
+
+  componentDidMount() {
+    window.addEventListener('popstate',
+      () => {
+        const gameState = {
+          "history": getJSONParam("history"),
+          "move_i": getJSONParam("move_i"),
+          "players": getJSONParam("players"),
+        };
+        (
+          document.readyState === "complete" ||
+          document.readyState === "loaded" ||
+          document.readyState === "interactive"
+        )
+        ?
+          this.setState(gameState)
+        :
+          window.addEventListener("DOMContentLoaded", this.setState.bind(this, gameState))
+      }
+    );
+  }
+
   render() {
     const history = this.state.history;
     const current = history[this.state.move_i];
     const win = calculateWinner(current);
-    const playerSymbol = this.props.players[this.state.move_i % this.props.players.length];
+    const playerSymbol = this.state.players[this.state.move_i % this.state.players.length];
     const status = (
       win?
         `Winner: ${win.player}`
@@ -175,7 +205,7 @@ class Game extends React.Component {
     if (calculateWinner(squares) || squares[i]) {
       return;
     }
-    squares[i] = this.props.players[this.state.move_i % this.props.players.length];
+    squares[i] = this.state.players[this.state.move_i % this.state.players.length];
     const newHistory = history.concat([squares]);
     this.setState({
       history: newHistory,
@@ -184,7 +214,7 @@ class Game extends React.Component {
     pushBrowserState({
       history: newHistory,
       move_i: history.length,
-      players: this.props.players
+      players: this.state.players
     });
   }
 
@@ -195,40 +225,17 @@ class Game extends React.Component {
     pushBrowserState({
       history: this.state.history,
       move_i: move_i,
-      players: this.props.players
+      players: this.state.players,
     });
   }
 }
 
 // ========================================
-function initializePage() {
-  replaceBrowserState({
-    "history": getJSONParam("history") || [Array(9).fill(null)],
-    "move_i": getJSONParam("move_i") || 0,
-    "players": getJSONParam("players") || ['X','O'],
-  });
 
-  ReactDOM.render(
-    <Game
-      history={window.history.state.history}
-      move_i={window.history.state.move_i}
-      players={window.history.state.players}
-      onClick={(i) => this.handleClick(i)}
-    />,
-    document.getElementById('root')
-  );
-}
-
-window.addEventListener('popstate', function() {
-  if (
-    (document.readyState === "complete" || document.readyState === "loaded" || document.readyState === "interactive")
-  ) {
-    initializePage();
-  } else {
-    window.addEventListener("DOMContentLoaded", initializePage);
-  }
-});
-initializePage();
+ReactDOM.render(
+  <Game />,
+  document.getElementById('root')
+);
 
 function updateBrowserState(fn, state) {
   fn.call(
@@ -256,7 +263,7 @@ function getJSONParam(paramKey) {
       var param_entry = param.split("=");
       if (param_entry[0] === paramKey) {
         return JSON.parse(atob(decodeURIComponent(param_entry[1])));
-      } else if (paramValue) {
+      } else if (paramValue !== false) {
         return paramValue;
       } else {
         return false;
